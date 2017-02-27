@@ -20,13 +20,11 @@ return d3.time.hour(timeFormat.parse(d.date)); // <-B
 });
 ```
 
-A text editor to edit and create HTML, CSS. and JavaScript files
-A modern web browser (Firefox 3, IE 9, Chrome, Safari 3.2, and later)
-A local HTTP server to host data file for some of the more advanced recipes in
-this book. We will cover how to set up a Node-based or Python-based simple
-HTTP server in the first chapter.
-Optionally, you will need a Git client if you would like to check out the recipe
-source code directly from our Git repository
+A text editor to edit and create HTML, CSS. and JavaScript files. 
+A modern web browser (Firefox 3, IE 9, Chrome, Safari 3.2, and later) 
+A local HTTP server to host data file for some of the more advanced recipes in this book.
+We will cover how to set up a Node-based or Python-based simple HTTP server in the first chapter.
+Optionally, you will need a Git client if you would like to check out the recipe source code directly from our Git repository.
 
 ##Related Products
 * [Building Responsive Data Visualizations with D3.js [Video]](https://www.packtpub.com/web-development/building-responsive-data-visualizations-d3js-video?utm_source=github&utm_medium=repository&utm_campaign=9781784394509)

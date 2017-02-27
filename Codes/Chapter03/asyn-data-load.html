@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Load JSON Data Feed</title>
+    <link rel="stylesheet" type="text/css" href="../../css/styles.css"/>
+    <script type="text/javascript" src="../../lib/d3.js"></script>
+</head>
+
+<body>
+
+<div id="chart"></div>
+
+<script type="text/javascript">
+    function render(data) {
+        var bars = d3.select("#chart").selectAll("div.h-bar") // <-A
+                .data(data);
+
+        bars.enter().append("div") // <-B
+            .attr("class", "h-bar")
+                .style("width", function (d) {
+                    return (d.expense * 5) + "px";
+                })
+            .append("span")
+                .text(function (d) {
+                    return d.category;
+                });
+    }
+
+    function load(){ // <-C
+        d3.json("data.json", function(error, json){ // <-D
+            render(json);
+        });
+    }
+</script>
+
+<div class="control-group">
+    <button onclick="load()">Load Data from JSON feed</button>
+</div>
+
+</body>
+
+</html>

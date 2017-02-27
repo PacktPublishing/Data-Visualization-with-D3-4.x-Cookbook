@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tree</title>
+    <link rel="stylesheet" type="text/css" href="../../css/styles.css"/>
+    <script type="text/javascript" src="../../lib/d3.js"></script>
+    <style type="text/css">
+        .node circle {
+            cursor: pointer;
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .node text {
+            font-size: 11px;
+        }
+
+        path.link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<script type="text/javascript">
+    function tree() {
+        var _chart = {};
+
+        var _width = 1600, _height = 1600,
+                _margins = {top: 30, left: 120, right: 30, bottom: 30},
+                _svg,
+                _nodes,
+                _i = 0,
+                _duration = 300,
+                _bodyG,
+                _root;
+
+        _chart.render = function () {
+            if (!_svg) {
+                _svg = d3.select("body").append("svg")
+                        .attr("height", _height)
+                        .attr("width", _width);
+            }
+
+            renderBody(_svg);
+        };
+
+        function renderBody(svg) {
+            if (!_bodyG) {
+                _bodyG = svg.append("g")
+                        .attr("class", "body")
+                        .attr("transform", function (d) {
+                            return "translate(" + _margins.left
+                                    + "," + _margins.top + ")";
+                        });
+            }
+
+            _root = d3.hierarchy(_nodes); // <-A
+
+            render(_root);
+        }
+
+        function render(root) {
+            var tree = d3.tree() // <-B
+                            .size([
+                                (_height - _margins.top - _margins.bottom),
+                                (_width - _margins.left - _margins.right)
+                            ]);
+
+            tree(root); // <-C
+
+            renderNodes(root); // <-D
+
+            renderLinks(root); // <-E
+        }
+
+        function renderNodes(root) {
+            var nodes = root.descendants();
+
+            var nodeElements = _bodyG.selectAll("g.node")
+                    .data(nodes, function (d) {
+                                    return d.id || (d.id = ++_i);
+                                });
+
+            var nodeEnter = nodeElements.enter().append("g")
+                    .attr("class", "node")
+                    .attr("transform", function (d) {  // <-F
+                        return "translate(" + d.y
+                                + "," + d.x + ")";
+                    })
+                    .on("click", function (d) { // <-G
+                        toggle(d);
+                        render(_root);
+                    });
+
+            nodeEnter.append("circle") // <-H
+                    .attr("r", 4);
+
+            var nodeUpdate = nodeEnter.merge(nodeElements)
+                    .transition().duration(_duration)
+                        .attr("transform", function (d) {
+                            return "translate(" + d.y + "," + d.x + ")"; // <-I
+                        });
+
+            nodeUpdate.select('circle')
+                        .style("fill", function (d) {
+                            return d._children ? "lightsteelblue" : "#fff"; // <-J
+                        });
+
+            var nodeExit = nodeElements.exit()
+                    .transition().duration(_duration)
+                    .attr("transform", function (d) {
+                        return "translate(" + d.y
+                                + "," + d.x + ")";
+                    })
+                    .remove();
+
+            nodeExit.select("circle")
+                    .attr("r", 1e-6)
+                    .remove();
+
+            renderLabels(nodeEnter, nodeUpdate, nodeExit);
+        }
+
+        function renderLabels(nodeEnter, nodeUpdate, nodeExit) {
+            nodeEnter.append("text")
+                   .attr("x", function (d) {
+                       return d.children || d._children ? -10 : 10; // <-K
+                   })
+                   .attr("dy", ".35em")
+                   .attr("text-anchor", function (d) {
+                       return d.children || d._children ? "end" : "start"; // <-L
+                   })
+                   .text(function (d) {
+                       return d.data.name;
+                   })
+                   .style("fill-opacity", 1e-6);
+
+           nodeUpdate.select("text")
+                   .style("fill-opacity", 1);
+
+           nodeExit.select("text")
+                   .style("fill-opacity", 1e-6)
+                   .remove();
+        }
+
+        function renderLinks(root) {
+            var nodes = root.descendants().slice(1);
+
+            var link = _bodyG.selectAll("path.link")
+                .data(nodes, function (d) {
+                                return d.id || (d.id = ++_i);
+                            });
+
+            link.enter().insert("path", "g") // <-M
+                        .attr("class", "link")
+                    .merge(link)
+                    .transition().duration(_duration)
+                        .attr("d", function (d) {
+                            return generateLinkPath(d, d.parent); // <-N
+                        });
+
+            link.exit().remove();
+        }
+
+        function generateLinkPath(target, source) {
+            var path = d3.path();
+            path.moveTo(target.y, target.x);
+            path.bezierCurveTo((target.y + source.y) / 2, target.x,
+                    (target.y + source.y) / 2, source.x, source.y, source.x);
+            return path.toString();
+        }
+
+        function toggle(d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            } else {
+                d.children = d._children;
+                d._children = null;
+            }
+        }
+
+        _chart.width = function (w) {
+            if (!arguments.length) return _width;
+            _width = w;
+            return _chart;
+        };
+
+        _chart.height = function (h) {
+            if (!arguments.length) return _height;
+            _height = h;
+            return _chart;
+        };
+
+        _chart.margins = function (m) {
+            if (!arguments.length) return _margins;
+            _margins = m;
+            return _chart;
+        };
+
+        _chart.nodes = function (n) {
+            if (!arguments.length) return _nodes;
+            _nodes = n;
+            return _chart;
+        };
+
+        return _chart;
+    }
+
+    var chart = tree();
+
+    function flare() {
+        d3.json("../../data/flare.json", function (nodes) {
+            chart.nodes(nodes).render();
+        });
+    }
+</script>
+
+<div class="control-group">
+    <button onclick="flare()">Render Flare</button>
+</div>
+
+</body>
+
+</html>
